@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Horoscope Reader</title>
+<style>
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background-color: #f4f4f9; 
+    color: #333; 
+    max-width: 500px; 
+    margin: 0 auto; 
+    padding: 20px; 
+  }
+  .card { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+    margin-bottom: 20px; 
+  }
+  h1 { text-align: center; color: #2c3e50; font-size: 24px;}
+  h2 { font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0;}
+  label { display: block; margin-top: 15px; font-weight: 600; font-size: 14px; color: #555;}
+  input, button { 
+    width: 100%; 
+    padding: 12px; 
+    margin-top: 8px; 
+    border-radius: 8px; 
+    border: 1px solid #ccc; 
+    box-sizing: border-box; 
+    font-size: 16px;
+  }
+  button { 
+    background-color: #2c3e50; 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    font-weight: bold;
+    margin-top: 25px; 
+    transition: background 0.3s;
+  }
+  button:hover { background-color: #1a252f; }
+  #dashboard { display: none; }
+  .score-container { margin: 20px 0; }
+  .score-bar { 
+    width: 100%; 
+    background: #e0e0e0; 
+    border-radius: 10px; 
+    overflow: hidden; 
+    height: 20px;
+    margin-top: 8px;
+  }
+  .score-fill { 
+    height: 100%; 
+    background: linear-gradient(90deg, #9b59b6, #3498db); 
+    width: 0%; 
+    transition: width 1s ease-in-out; 
+  }
+  .info-pill {
+    background: #f0f4f8;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #2c3e50;
+    display: inline-block;
+    margin-bottom: 15px;
+  }
+  .reading-text { line-height: 1.6; font-size: 15px; color: #444; }
+  .back-btn { background-color: #95a5a6; margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<div id="setupForm" class="card">
+  <h1>Cosmic Daily Reader</h1>
+  <p style="text-align:center; color:#666; font-size: 14px;">Enter your details to generate your 24-hour forecast.</p>
+  
+  <label for="birthdate">Birth Date</label>
+  <input type="date" id="birthdate" required>
+  
+  <label for="location">Current City</label>
+  <input type="text" id="location" value="Douliu City, Taiwan" required>
+  
+  <button onclick="generateReading()">Read My Horoscope</button>
+</div>
+
+<div id="dashboard" class="card">
+  <h2>Your 24-Hour Forecast</h2>
+  <div class="info-pill" id="displayLoc"></div>
+  <div class="info-pill" id="displaySign"></div>
+  
+  <div class="score-container">
+    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 14px;">
+      <span>Cosmic Energy Flow</span>
+      <span id="scoreText"></span>
+    </div>
+    <div class="score-bar">
+      <div class="score-fill" id="scoreFill"></div>
+    </div>
+  </div>
+  
+  <div style="margin-top: 20px;">
+    <strong>Active Transits:</strong>
+    <p style="font-size: 14px; color: #666; margin-top: 5px;">Moon trine Mercury, Venus entering Taurus</p>
+  </div>
+  
+  <div style="margin-top: 20px;">
+    <strong>The Cosmic Weather:</strong>
+    <p class="reading-text" id="readingText"></p>
+  </div>
+  
+  <button class="back-btn" onclick="resetForm()">← Check Another Sign</button>
+</div>
+
+<script>
+function getZodiac(month, day) {
+  if ((month == 1 && day <= 19) || (month == 12 && day >= 22)) return "Capricorn";
+  if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return "Aquarius";
+  if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) return "Pisces";
+  if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) return "Aries";
+  if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) return "Taurus";
+  if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) return "Gemini";
+  if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) return "Cancer";
+  if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return "Leo";
+  if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return "Virgo";
+  if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) return "Libra";
+  if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) return "Scorpio";
+  if ((month == 11 && day >= 22) || (month == 12 && day <= 21)) return "Sagittarius";
+}
+
+function getChineseZodiac(year) {
+  const animals = ["Monkey", "Rooster", "Dog", "Pig", "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat"];
+  return animals[year % 12];
+}
+
+function generateReading() {
+  const dateStr = document.getElementById('birthdate').value;
+  const location = document.getElementById('location').value;
+  
+  if(!dateStr || !location) { 
+    alert("Please enter both your birth date and location."); 
+    return; 
+  }
+  
+  const date = new Date(dateStr);
+  const sign = getZodiac(date.getMonth() + 1, date.getDate());
+  const animal = getChineseZodiac(date.getFullYear());
+  
+  document.getElementById('displaySign').innerText = sign + " / " + animal + " Year";
+  document.getElementById('displayLoc').innerText = "📍 " + location;
+  
+  const score = Math.floor(Math.random() * 25) + 75; 
+  document.getElementById('scoreText').innerText = score + '/100';
+  
+  setTimeout(() => {
+    document.getElementById('scoreFill').style.width = score + '%';
+  }, 100);
+  
+  document.getElementById('readingText').innerText = "The dynamic, moving energy of the " + animal + " blends closely with your core " + sign + " nature over the next 24 hours. The transits suggest that today is less about starting massive new structures and more about leaning into curiosity. Practical Action: Keep your immediate physical space organized this evening to prepare for a highly productive morning tomorrow.";
+  
+  document.getElementById('setupForm').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+}
+
+function resetForm() {
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('setupForm').style.display = 'block';
+  document.getElementById('scoreFill').style.width = '0%';
+}
+</script>
+
+</body>
+</html>
+
+
